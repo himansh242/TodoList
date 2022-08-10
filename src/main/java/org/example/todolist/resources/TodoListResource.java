@@ -26,7 +26,6 @@ public class TodoListResource {
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)
     public GenericResponse<TodoListResponse> createTodoList(PutTodoListRequest request) {
-        //System.out.println("Create new todolist = " + request );
         return GenericResponse.ok(todoListService.createTodoList(request));
     }
 
@@ -36,7 +35,6 @@ public class TodoListResource {
     @Produces(MediaType.APPLICATION_JSON)
     public GenericResponse<TodoListResponse> updateTodoList(@PathParam("todoListId") String todoListId,
                                                             PostTodoListRequest request) {
-        //System.out.println("Update todolist request received. Request = " + request + " todoListId = " + todoListId);
         return GenericResponse.ok(todoListService.updateTodoList(todoListId, request));
     }
 
@@ -44,7 +42,6 @@ public class TodoListResource {
     @Path("{todoListId}")
     @Produces(MediaType.APPLICATION_JSON)
     public GenericResponse<TodoListResponse> deleteTodoList(@PathParam("todoListId") String todoListId) {
-        //System.out.println("Delete todolist request received. todoListId = " + todoListId);
         return GenericResponse.ok(todoListService.deleteTodoList(todoListId));
     }
 
@@ -52,7 +49,6 @@ public class TodoListResource {
     @Path("{todoListId}")
     @Produces(MediaType.APPLICATION_JSON)
     public GenericResponse<TodoListResponse> getTodoList(@PathParam("todoListId") String todoListId) {
-        //System.out.println("Get todolist request received. todoListId = " + todoListId);
         return GenericResponse.ok(todoListService.getTodoList(todoListId));
     }
 }

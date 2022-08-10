@@ -36,13 +36,8 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
-    public TaskResponse deleteTask(String todoListId, String taskId) {
-        boolean taskPresent = taskRepository.deleteTask(todoListId, taskId);
-        return TaskResponse.builder()
-                .task(null)
-                .deadline(null)
-                .status(null)
-                .id(null)
-                .build();
+    public TaskResponse deleteTask(String todoListId, String taskId) throws Exception {
+        return taskRepository.deleteTask(todoListId, taskId);
+
     }
 }

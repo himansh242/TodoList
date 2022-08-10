@@ -19,9 +19,7 @@ import java.util.*;
 @Singleton
 @AllArgsConstructor(onConstructor_ = @Inject)
 public class SimpleTodoListRepositoryImpl implements TodoListRepository {
-
     private final DataStore dataStore;
-
     private LookupDao<StoredTask> daoTask;
     private LookupDao<StoredTodoList> daoTodoList;
 
@@ -29,14 +27,13 @@ public class SimpleTodoListRepositoryImpl implements TodoListRepository {
     @SneakyThrows
     @Override
     public StoredTodoList createTodoList(PutTodoListRequest request)  {
-        StoredTodoList storedTodoList = new StoredTodoList();
-        storedTodoList.setTitle(request.getTitle());
-        dataStore.todoListCount++;
-        String todoListId = "todo" + String.valueOf(dataStore.todoListCount);
-        storedTodoList.setTodolistId(todoListId);
-        var todoListOptional = daoTodoList.save(storedTodoList);
-        //dataStore.todoListIdToTitle.put(todoListId, storedTodoList);
-        //dataStore.todoListIdToTaskList.put(todoListId, new ArrayList<>());
+
+        String todoListId = "todo" + dataStore.todoListCount++;
+        StoredTodoList storedTodoList = StoredTodoList.builder()
+                .todolistId(todoListId)
+                .title(request.getTitle())
+                .build();
+        daoTodoList.save(storedTodoList);
         return storedTodoList;
     }
 
@@ -45,11 +42,8 @@ public class SimpleTodoListRepositoryImpl implements TodoListRepository {
     @Override
     public Map<StoredTodoList, List<StoredTask>> getTodoList(String todoListId) {
         Map<StoredTodoList, List<StoredTask>> completeTodoList = new HashMap<>();
-        //StoredTodoList storedTodoList = new StoredTodoList();
-        //storedTodoList.setTodolistId(todoListId);
-        var storedTodoListOptional = daoTodoList.get( todoListId );
+        var storedTodoListOptional = daoTodoList.get(todoListId);
         StoredTodoList storedTodoList;
-        //storedTodoList.setTitle(dataStore.todoListIdToTitle.get(todoListId).getTitle());
         DetachedCriteria criteria = DetachedCriteria.forClass(StoredTask.class);
         criteria.add(Restrictions.eq("todoListId", todoListId));
         List<StoredTask> tasks = daoTask.scatterGather(criteria);
@@ -63,12 +57,12 @@ public class SimpleTodoListRepositoryImpl implements TodoListRepository {
     @SneakyThrows
     @Override
     public StoredTodoList updateTodoList(String todoListId, PostTodoListRequest request) {
-        StoredTodoList storedTodoList = new StoredTodoList();
-        storedTodoList.setTodolistId(todoListId);
-        storedTodoList.setTitle(request.getTitle());
+        StoredTodoList storedTodoList = StoredTodoList.builder()
+                .todolistId(todoListId)
+                .title(request.getTitle())
+                .build();
         daoTodoList.delete(todoListId);
-        // use update.
-        var todoListOptional = daoTodoList.save(storedTodoList);
+        daoTodoList.save(storedTodoList);
         return storedTodoList;
     }
 
@@ -78,8 +72,8 @@ public class SimpleTodoListRepositoryImpl implements TodoListRepository {
         DetachedCriteria criteria = DetachedCriteria.forClass(StoredTask.class);
         criteria.add(Restrictions.eq("todoListId", todoListId));
         List<StoredTask> tasks = daoTask.scatterGather(criteria);
-        for(int i = 0; i < tasks.size(); i++) {
-            daoTask.delete(tasks.get(i).getTaskId());
+        for (StoredTask task : tasks) {
+            daoTask.delete(task.getTaskId());
         }
         return true;
     }

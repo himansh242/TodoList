@@ -11,7 +11,6 @@ import org.example.todolist.repositories.TaskRepository;
 import org.example.todolist.repositories.TodoListRepository;
 import org.example.todolist.repositories.impl.SimpleTaskRepositoryImpl;
 import org.example.todolist.repositories.impl.SimpleTodoListRepositoryImpl;
-import org.example.todolist.repositories.impl.TaskRepositoryImpl;
 import org.example.todolist.services.TaskService;
 import org.example.todolist.services.TodoListService;
 import org.example.todolist.services.impl.TaskServiceImpl;
@@ -32,8 +31,6 @@ public class TodolistModule extends AbstractModule {
         bind(TodoListService.class).to(TodoListServiceImpl.class).in(Singleton.class);
 
         bind(TodoListRepository.class).to(SimpleTodoListRepositoryImpl.class).in(Singleton.class);
-
-    //    bind(TaskRepository.class).to(TaskRepositoryImpl.class).in(Singleton.class);
 
         bind(TaskService.class).to(TaskServiceImpl.class).in(Singleton.class);
 

@@ -10,10 +10,7 @@ import java.time.LocalDateTime;
 public class PostTaskRequest {
 
     private String task;
-
-    //private LocalDateTime deadline;
     private Long deadline;
-
     private TaskStatus status;
 
 }

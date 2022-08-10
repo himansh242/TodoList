@@ -25,7 +25,6 @@ public class TaskResource {
     @Produces(MediaType.APPLICATION_JSON)
     public GenericResponse<TaskResponse> createTask(@PathParam("todoListId") String todoListId,
                                                     PutTaskRequest request) {
-        //System.out.println("Create new todolist = " + request );
         return GenericResponse.ok(taskService.createTask(todoListId, request));
     }
 
@@ -38,7 +37,6 @@ public class TaskResource {
             @PathParam("taskId") String taskId,
             PostTaskRequest request
     ) {
-        //System.out.println("Update todolist request received. Request = " + request + " todoListId = " + todoListId);
         return GenericResponse.ok(taskService.updateTask(todoListId, taskId, request));
     }
 
@@ -46,7 +44,7 @@ public class TaskResource {
     @Path("{taskId}")
     @Produces(MediaType.APPLICATION_JSON)
     public GenericResponse<TaskResponse> deleteTask(@PathParam("todoListId") String todoListId,
-                                                    @PathParam("taskId") String taskId) {
+                                                    @PathParam("taskId") String taskId) throws Exception {
         return GenericResponse.ok(taskService.deleteTask(todoListId, taskId));
     }
 

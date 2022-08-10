@@ -16,7 +16,7 @@ import org.hibernate.criterion.DetachedCriteria;
 import org.hibernate.criterion.Restrictions;
 
 import javax.inject.Inject;
-import java.util.List;
+import java.util.Optional;
 
 @Singleton
 @AllArgsConstructor(onConstructor_ = @Inject)
@@ -25,9 +25,7 @@ public class SimpleTaskRepositoryImpl implements TaskRepository {
 
     private final DataStore dataStore;
 
-    private static final String TASKID = "taskId";
-
-    private static final String TODOLISTID = "todoListId";
+    private static final String TASK_ID = "taskId";
 
     private LookupDao<StoredTask> daoTask;
 
@@ -37,101 +35,122 @@ public class SimpleTaskRepositoryImpl implements TaskRepository {
     @Override
     public TaskResponse createTask(String todoListId, PutTaskRequest request) {
 
+        var storedTodoListOptional = daoTodoList.get(todoListId);
+
+        if(storedTodoListOptional.isEmpty()) {
+            return TaskResponse.builder()
+                    .message("Corresponding TodoListId is not present")
+                    .build();
+        }
+
         StoredTask storedTask = new StoredTask();
-        dataStore.taskCount++;
-        storedTask.setTaskId("task"+String.valueOf(dataStore.taskCount));
+        storedTask.setTaskId("task"+ dataStore.taskCount++);
         storedTask.setTask(request.getTask());
         storedTask.setDeadline(request.getDeadline());
         storedTask.setTodoListId(todoListId);
         storedTask.setStatus(TaskStatus.PENDING);
-        TaskResponse taskResponse = TaskResponse.builder()
+
+        daoTask.save(storedTask);
+
+        return TaskResponse.builder()
                 .id(storedTask.getTaskId())
-                .task(storedTask.getTaskId())
+                .task(storedTask.getTask())
                 .deadline(storedTask.getDeadline())
                 .status(storedTask.getStatus())
+                .message("Saved Task Successfully")
                 .build();
-        var storedTodoListOptional = daoTodoList.get(todoListId);
-        if( storedTodoListOptional.isPresent()) {
-            daoTask.save(storedTask);
-        }
-        // use builder.
-        //dataStore.todoListIdToTaskList.get(todoListId ).add(storedTask);
-        return taskResponse;
     }
 
     @Override
-    public TaskResponse getTask(String todoListId, String taskId) {
+    public TaskResponse getTask(String todoListId, String taskId) throws Exception {
 
-        DetachedCriteria criteria = DetachedCriteria.forClass(StoredTask.class);
-        //criteria.add(Restrictions.eq(TODOLISTID, todoListId))
-        //        .add(Restrictions.eq(TASKID, taskId));
-        criteria.add(Restrictions.eq(TASKID, taskId));
-        List<StoredTask> tasks = daoTask.scatterGather(criteria);
-        StoredTask storedTask = tasks.get(0);
+        Optional<StoredTodoList> storedTodoList = daoTodoList.get(todoListId);
 
-        TaskResponse taskResponse = TaskResponse.builder().build();
-        taskResponse.setId(storedTask.getTaskId());
-        taskResponse.setTask(storedTask.getTask());
-        taskResponse.setDeadline(storedTask.getDeadline());
-        taskResponse.setStatus(storedTask.getStatus());
-        return taskResponse;
+        if(storedTodoList.isEmpty()) {
+            return TaskResponse.builder()
+                    .message("Given todoListId Does not exist")
+                    .build();
+        }
+
+        Optional<StoredTask> tasks = daoTask.get(taskId);
+        if(tasks.isEmpty()) {
+            return TaskResponse.builder()
+                    .message("Corresponding taskId is not present")
+                    .build();
+        }
+
+        StoredTask storedTask = tasks.get();
+        return TaskResponse.builder()
+                .id(storedTask.getTaskId())
+                .task(storedTask.getTask())
+                .deadline(storedTask.getDeadline())
+                .status(storedTask.getStatus())
+                .message("Search successful")
+                .build();
     }
 
     @SneakyThrows
     @Override
     public TaskResponse updateTask(String todoListId, String taskId, PostTaskRequest request) {
 
-        //List<StoredTask> tasks = dataStore.todoListIdToTaskList.get(todoListId);
+        Optional<StoredTodoList> storedTodoList = daoTodoList.get(todoListId);
+
+        if(storedTodoList.isEmpty()) {
+            return TaskResponse.builder()
+                    .message("Given todoListId Does not exist")
+                    .build();
+        }
+
         DetachedCriteria criteria = DetachedCriteria.forClass(StoredTask.class);
-        //criteria.add(Restrictions.eq(TODOLISTID, todoListId))
-        //        .add(Restrictions.eq(TASKID, taskId));
-        criteria.add(Restrictions.eq(TASKID, taskId));
-        List<StoredTask> tasks = daoTask.scatterGather(criteria);
-        StoredTask storedTask = tasks.get(0);
+        criteria.add(Restrictions.eq(TASK_ID, taskId));
+        Optional<StoredTask> task = daoTask.get(taskId);
+
+        if(task.isEmpty()) {
+            return TaskResponse.builder()
+                    .message("Corresponding taskId is not present")
+                    .build();
+        }
+
+        StoredTask storedTask = task.get();
         daoTask.delete(taskId);
         storedTask.setTask(request.getTask());
         storedTask.setStatus(request.getStatus());
         storedTask.setDeadline(request.getDeadline());
         daoTask.save(storedTask);
-        TaskResponse taskResponse = TaskResponse.builder().build();
-        taskResponse.setId(storedTask.getTaskId());
-        taskResponse.setTask(storedTask.getTask());
-        taskResponse.setDeadline(storedTask.getDeadline());
-        taskResponse.setStatus(storedTask.getStatus());
-
-        /*for( int i=0; i<tasks.size(); i++) {
-            if(tasks.get(i).getTaskId().equals(taskId)) {
-                tasks.get(i).setTask(request.getTask());
-                tasks.get(i).setStatus(request.getStatus());
-                tasks.get(i).setDeadline(request.getDeadline());
-
-                StoredTask storedTask = tasks.get(i);
-                taskResponse.setId(storedTask.getTaskId());
-                taskResponse.setTask(storedTask.getTask());
-                taskResponse.setDeadline(storedTask.getDeadline());
-                taskResponse.setStatus(storedTask.getStatus());
-                break;
-            }
-        }*/
-        return taskResponse;
+        return TaskResponse.builder()
+                .id(storedTask.getTaskId())
+                .task(storedTask.getTask())
+                .deadline(storedTask.getDeadline())
+                .status(storedTask.getStatus())
+                .message("Successfully updated the given taskId")
+                .build();
     }
 
     @Override
-    public boolean deleteTask(String todoListId, String taskId) {
+    public TaskResponse deleteTask(String todoListId, String taskId) throws Exception {
+        Optional<StoredTodoList> storedTodoList = daoTodoList.get(todoListId);
 
-        /*List<StoredTask> tasks = dataStore.todoListIdToTaskList.get(todoListId );
-        for( int i=0; i<dataStore.todoListIdToTaskList.get(todoListId ).size(); i++) {
-            if(dataStore.todoListIdToTaskList.get(todoListId ).get(i).getTaskId().equals(taskId)) {
-                dataStore.todoListIdToTaskList.get(todoListId ).remove(i);
-                break;
-            }
-        }*/
-        //DetachedCriteria criteria = DetachedCriteria.forClass(StoredTask.class);
-        //criteria.add(Restrictions.eq(TODOLISTID, todoListId))
-        //        .add(Restrictions.eq(TASKID, taskId));
-        //List<StoredTask> tasks = daoTask.scatterGather(criteria);
-        //StoredTask storedTask = tasks.get(0);
+        if(storedTodoList.isEmpty()) {
+            return TaskResponse.builder()
+                    .message("Given todoListId Does not exist")
+                    .build();
+        }
+
+        DetachedCriteria criteria = DetachedCriteria.forClass(StoredTask.class);
+        criteria.add(Restrictions.eq(TASK_ID, taskId));
+        Optional<StoredTask> task = daoTask.get(taskId);
+
+        if(task.isEmpty()) {
+            return TaskResponse.builder()
+                    .message("Corresponding taskId is not present")
+                    .build();
+        }
+
+
         daoTask.delete(taskId);
-        return true;
+        return TaskResponse
+                .builder()
+                .message("successfully delete taskId")
+                .build();
     }
 }

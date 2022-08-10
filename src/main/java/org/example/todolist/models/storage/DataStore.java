@@ -11,9 +11,6 @@ import java.util.Map;
 @Singleton
 public class DataStore {
 
-    public Integer todoListCount = 0;
-
-    public Integer taskCount = 0;
-    public Map<String, StoredTodoList> todoListIdToTitle = new HashMap<>();
-    public Map<String, List<StoredTask>> todoListIdToTaskList = new HashMap<>();
+    public Integer todoListCount = 1;
+    public Integer taskCount = 1;
 }

@@ -12,5 +12,5 @@ public interface TaskRepository {
 
     TaskResponse updateTask(String todoListId, String taskId, PostTaskRequest request);
 
-    boolean deleteTask(String todoListId, String taskId);
+    TaskResponse deleteTask(String todoListId, String taskId) throws Exception;
 }

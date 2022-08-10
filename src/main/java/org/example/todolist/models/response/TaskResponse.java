@@ -16,4 +16,6 @@ public class TaskResponse {
     private Long deadline;
 
     private TaskStatus status;
+
+    private String message;
 }

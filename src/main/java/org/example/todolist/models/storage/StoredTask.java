@@ -14,18 +14,13 @@ import javax.persistence.*;
 @Entity
 @Table(name = "tasks")
 @Builder
-@Jacksonized
 @AllArgsConstructor
 @NoArgsConstructor
 public class StoredTask {
-//    @Column(name = "id")
-//    @GeneratedValue
-//    private long id;
 
     @Id
     @LookupKey
     @Column(name = "taskId")
-    //@GeneratedValue(strategy = GenerationType.IDENTITY)
     private String taskId;
 
     @Column(name = "todoListId")

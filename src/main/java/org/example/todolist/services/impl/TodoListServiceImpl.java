@@ -25,61 +25,73 @@ public class TodoListServiceImpl implements TodoListService {
 
     @Override
     public TodoListResponse createTodoList(PutTodoListRequest request) {
-        TodoListResponse todoListResponse = new TodoListResponse();
         StoredTodoList storedTodoList = todoListRepository.createTodoList(request);
-        todoListResponse.setId(storedTodoList.getTodolistId());
-        todoListResponse.setTitle(storedTodoList.getTitle());
-        todoListResponse.setTasks(null);
-        return todoListResponse;
+        return TodoListResponse.builder()
+                .id(storedTodoList.getTodolistId())
+                .title(storedTodoList.getTitle())
+                .message("Todo list successfully created")
+                .build();
     }
 
     @Override
     public TodoListResponse getTodoList(String todoListId) {
-        TodoListResponse todoListResponse = new TodoListResponse();
         Map<StoredTodoList, List<StoredTask>> completeTodoList = todoListRepository.getTodoList(todoListId);
-        todoListResponse.setId(todoListId);
+        if (completeTodoList.isEmpty()) {
+            return TodoListResponse.builder()
+                    .message("TodoList id not present")
+                    .build();
+        }
         Map.Entry<StoredTodoList, List<StoredTask> > entry = completeTodoList.entrySet().iterator().next();
         StoredTodoList storedTodoList = entry.getKey();
         List<StoredTask> tasks = entry.getValue();
-        todoListResponse.setTitle(storedTodoList.getTitle());
+
+        TodoListResponse todoListResponse = TodoListResponse.builder()
+                .id(todoListId)
+                .title(storedTodoList.getTitle())
+                .build();
+
         List<TaskResponse> taskResponses = new ArrayList<>();
         if (tasks != null) {
-            for (int i = 0; i < tasks.size(); i++) {
-                TaskResponse taskResponse = TaskResponse.builder().build();
-                taskResponse.setTask(tasks.get(i).getTask());
-                taskResponse.setId(tasks.get(i).getTaskId());
-                taskResponse.setDeadline(tasks.get(i).getDeadline());
-                taskResponse.setStatus(tasks.get(i).getStatus());
+            for (StoredTask task : tasks) {
+                TaskResponse taskResponse = TaskResponse.builder()
+                        .id(task.getTaskId())
+                        .task(task.getTask())
+                        .deadline(task.getDeadline())
+                        .status(task.getStatus())
+                        .build();
                 taskResponses.add(taskResponse);
             }
+            todoListResponse.setMessage("Here is the list of todos for corresponding todoListId");
             todoListResponse.setTasks(taskResponses);
         } else {
-            todoListResponse.setTasks(null);
+            todoListResponse.setMessage("No tasks present for the corresponding todoListId");
         }
         return todoListResponse;
     }
 
     @Override
     public TodoListResponse updateTodoList(String todoListId, PostTodoListRequest request) {
-        TodoListResponse todoListResponse = new TodoListResponse();
         StoredTodoList storedTodoList = todoListRepository.updateTodoList(todoListId, request);
-        todoListResponse.setId(storedTodoList.getTodolistId());
-        todoListResponse.setTitle(storedTodoList.getTitle());
-        todoListResponse.setTasks(null);
-        return todoListResponse;
+        return TodoListResponse
+                .builder()
+                .id(storedTodoList.getTodolistId())
+                .title(storedTodoList.getTitle())
+                .tasks(null)
+                .message("Successfully updated corresponding todo list")
+                .build();
     }
 
     @Override
     public TodoListResponse deleteTodoList(String todoListId) {
-        TodoListResponse todoListResponse = new TodoListResponse();
+
         boolean success = todoListRepository.deleteTodoList(todoListId);
         if(success) {
-            todoListResponse.setId(null);
-            todoListResponse.setTasks(null);
-            todoListResponse.setTitle(null);
-        } else {
-            assert false;
+            return TodoListResponse.builder()
+                    .message("Successfully deleted corresponding todo list")
+                    .build();
         }
-        return todoListResponse;
+        return TodoListResponse.builder()
+                .message("Some error occurred while deletion of corresponding todo list")
+                .build();
     }
 }

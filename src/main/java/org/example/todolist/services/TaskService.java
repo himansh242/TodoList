@@ -15,5 +15,5 @@ public interface TaskService {
 
     TaskResponse updateTask(String todoListId, String taskId, PostTaskRequest request);
 
-    TaskResponse deleteTask(String todoListId, String taskId);
+    TaskResponse deleteTask(String todoListId, String taskId) throws Exception;
 }
